@@ -184,7 +184,6 @@ namespace Reversi
         {
             this.UpdateRood.Text = Convert.ToString(Score(Piece.red));
             this.UpdateBlauw.Text = Convert.ToString(Score(Piece.blue));
-            spelstatus = spelstatus == "Rood is aan zet" ? "Blauw is aan zet" : "Rood is aan zet";
             this.AandeBeurt.Text = spelstatus;
         }
 
@@ -286,6 +285,7 @@ namespace Reversi
                     catch (IndexOutOfRangeException e) { }
                 }
             }
+            spelstatus = spelstatus == "Rood is aan zet" ? "Blauw is aan zet" : "Rood is aan zet";
         }
     }
 }
