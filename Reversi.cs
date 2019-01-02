@@ -26,24 +26,12 @@ namespace Reversi
         {
             InitializeComponent();
             this.Text = "Reversi";
-            help = false;
             breedte = 6;
             hoogte = 6;
-            beurt = 0;
-            scoreRood = 0;
-            scoreBlauw = 0;
-            spelstatus = "Rood is aan zet";
 
             stenen = new Piece[breedte, hoogte];
-            for (int x = 0; x < breedte; x++)
-                for (int y = 0; y < hoogte; y++)
-                    stenen[x, y] = Piece.none;
 
-            // laadt startpositie
-            stenen[breedte / 2 - 1, hoogte / 2 - 1] = Piece.red;
-            stenen[breedte / 2, hoogte / 2] = Piece.red;
-            stenen[breedte / 2 - 1, hoogte / 2] = Piece.blue;
-            stenen[breedte / 2, hoogte / 2 - 1] = Piece.blue;
+            NieuwSpelKnop(null, EventArgs.Empty);
 
             this.spelbord.Paint += this.tekenScherm;
         }
@@ -164,7 +152,7 @@ namespace Reversi
             for (int x = 0; x < breedte; x++)
             {
                 for (int y = 0; y < hoogte; y++)
-                    stenen[x, y] = 0;
+                    stenen[x, y] = Piece.none;
             }
 
             // herlaadt startpositie
@@ -176,7 +164,8 @@ namespace Reversi
             help = false;
             beurt = 0;
             spelstatus = "Rood is aan zet";
-
+            scoreRood = 0;
+            scoreBlauw = 0;
             spelbord.Invalidate();
         }
 
