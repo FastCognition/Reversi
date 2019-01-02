@@ -13,15 +13,15 @@ namespace Reversi
     public partial class Reversi : Form
     {
         public enum Piece : byte
-            { none = 0, red = 1, blue = 2 }
+        { none = 0, red = 1, blue = 2 }
         Piece[,] stenen;
 
         int breedte, hoogte, hokjesgrootte, beurt, scoreRood, scoreBlauw;
-        int mx, my, klikbreedte, klikhoogte, winnaar;
+        int mx, my, klikbreedte, klikhoogte, winnaar, schermbreedte, schermhoogte;
         bool help, toegestaan, beeindigd;
 
         string spelstatus;
-    
+
         public Reversi()
         {
             InitializeComponent();
@@ -51,7 +51,11 @@ namespace Reversi
         {
 
             Graphics Rev = ReversiBord.Graphics;
-            hokjesgrootte = spelbord.Width / breedte;
+
+            //Om de hokjes vierkant te houden
+            hokjesgrootte = Math.Min(spelbord.Width / breedte, spelbord.Height / hoogte);
+            schermbreedte = hokjesgrootte * breedte;
+            schermhoogte = hokjesgrootte * hoogte;
 
             // teken het bord
             for (int t1 = 0; t1 < breedte; t1++)
@@ -70,30 +74,17 @@ namespace Reversi
                     {
                         tekenSteen(obj, ReversiBord, Color.Red, x, y);
                     }
-                        
+
                     if (stenen[x, y] == Piece.blue)
                     {
                         tekenSteen(obj, ReversiBord, Color.Blue, x, y);
                     }
-                       
+
                 }
             }
 
-            // score bijhouden
-            for (int t = 0; t < breedte; t++)
-            {
-                for (int r = 0; r < hoogte; r++)
-                {
-                    if (stenen[t, r] != Piece.none)
-                        if (stenen[t, r] == Piece.red)
-                            scoreRood++;
-                        else
-                            scoreBlauw++;
-                }
-            }
-            
             InitializeMyControl();
-            
+
             // eindeteksten
             if (IsHetSpelAfgelopen() == true)
             {
@@ -113,10 +104,7 @@ namespace Reversi
             // hier staat wat de hulpmethode doet, true/false wordt ergens anders bepaald
             if (help == true)
             {
-                int hulpcirkelsize = hokjesgrootte / 2;
-
-                Rectangle opencirkeltje = new Rectangle(2 * hokjesgrootte, 3 * hokjesgrootte, hulpcirkelsize, hulpcirkelsize);
-                Rev.DrawEllipse(Pens.Black, opencirkeltje);
+                Hulp(obj, ReversiBord);
             }
         }
         // teken steen
@@ -125,14 +113,52 @@ namespace Reversi
             Graphics Rev = ReversiBord.Graphics;
 
             SolidBrush kleur1 = new SolidBrush(kleur);
-            Rectangle cirkel = new Rectangle(posx * hokjesgrootte - 1, posy*hokjesgrootte - 1, hokjesgrootte, hokjesgrootte);
+            Rectangle cirkel = new Rectangle(posx * hokjesgrootte - 1, posy * hokjesgrootte - 1, hokjesgrootte, hokjesgrootte);
             Rev.FillEllipse(kleur1, cirkel);
+        }
+
+        public void Hulp(object obj, PaintEventArgs ReversiBord)
+        {
+            Graphics Rev = ReversiBord.Graphics;
+            int hulpcirkelsize = hokjesgrootte / 2;
+
+            for (int y = 0; y < hoogte; y++)
+            {
+                for (int x = 0; x < breedte; x++)
+                {
+                    Piece smallvar;
+                    if (beurt % 2 == 0)
+                        smallvar = Piece.red;
+                    else
+                        smallvar = Piece.blue;
+
+                    if (stenen[x, y] == Piece.none & LegaleZet(x, y, smallvar) == true)
+                    {
+                        Rectangle opencirkeltje = new Rectangle(x * hokjesgrootte, y * hokjesgrootte, hulpcirkelsize, hulpcirkelsize);
+                        Rev.DrawEllipse(Pens.Black, opencirkeltje);
+                    }
+                }
+            }
+        }
+
+        public int Score(Piece color)
+        {
+            int score = 0;
+            for (int y = 0; y < breedte; y++)
+            {
+                for (int x = 0; x < hoogte; x++)
+                {
+                    if (stenen[y, x] == color)
+                        score++;
+                }
+            }
+            return score;
         }
 
         // nieuw-spel knop
         private void NieuwSpelKnop(object sender, EventArgs e)
         {
-            for(int x = 0; x < breedte; x++)
+            for (int x = 0; x < breedte; x++)
             {
                 for (int y = 0; y < hoogte; y++)
                     stenen[x, y] = 0;
@@ -163,8 +189,8 @@ namespace Reversi
         // method controlling textboxes
         private void InitializeMyControl()
         {
-            this.UpdateRood.Text = Convert.ToString(scoreRood);
-            this.UpdateBlauw.Text = Convert.ToString(scoreBlauw);
+            this.UpdateRood.Text = Convert.ToString(Score(Piece.red));
+            this.UpdateBlauw.Text = Convert.ToString(Score(Piece.blue));
         }
 
         public bool IsHetSpelAfgelopen()
@@ -178,23 +204,33 @@ namespace Reversi
 
         public bool LegaleZet(int row, int column, Piece color)
         {
-            toegestaan = false;
-            if (stenen[klikbreedte, klikhoogte] == 0) // is dit vakje leeg?
+            int teller = 1;
+            if (stenen[row, column] == Piece.none) // is dit vakje leeg?
             {
-                for (int y = -1; y <= 1; y++) // kijken wat er omheen ligt
-                    for (int x = -1; x <= 1; x++)
+                for (int dy = -1; dy <= 1; dy++) // kijken wat er omheen ligt
+                    for (int dx = -1; dx <= 1; dx++)
                     {
-                        // check voor array-boundaries
-                        if ((klikbreedte + x) <= breedte && (klikhoogte + y) <= hoogte && (klikhoogte + y) > 0 && (klikbreedte + x) > 0)
+                        try
                         {
-                            if (stenen[klikbreedte + x, klikhoogte + y] == Piece.red && beurt % 2 == 0)
-                                toegestaan = true; // als het vakje eromheen van een andere kleur is, dan kan dit op een zet wijzen
-                            if (stenen[klikbreedte + x, klikhoogte + y] == Piece.blue && beurt % 2 == 1)
-                                toegestaan = true;
+                            int huidigex = row + dx, huidigey = column + dy;
+                            if (stenen[huidigex, huidigey] != color && stenen[huidigex, huidigey] != Piece.none)
+                            {
+                                while (stenen[huidigex, huidigey] != color)
+                                {
+                                    huidigex += teller * dx;
+                                    huidigey += teller * dy;
+                                    teller++;
+                                }
+                                if (stenen[huidigex, huidigey] == color)
+                                {
+                                    return true;
+                                }
+                            }
                         }
+                        catch (IndexOutOfRangeException e) { }
                     }
             }
-            return toegestaan;
+            return false;
         }
 
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
@@ -206,25 +242,55 @@ namespace Reversi
             klikhoogte = my / hokjesgrootte; // ycoords omgezet naar 1-6 hokjes
 
             // waarde van array x,y veranderen op basis van wie zijn beurt het is
-            if (LegaleZet(klikbreedte, klikhoogte, stenen[klikbreedte, klikhoogte]) == true)
+            if (beurt % 2 == 0)
             {
-                if (beurt % 2 == 0)
+                if (LegaleZet(klikbreedte, klikhoogte, Piece.red) == true)
                 {
-                    stenen[klikbreedte, klikhoogte] = Piece.red;
-                    beurt++;
-                }
-                else
-                {
-                    stenen[klikbreedte, klikhoogte] = Piece.blue;
+                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
                     beurt++;
                 }
             }
-            
+            else if (beurt % 2 == 1)
+            {
+                if (LegaleZet(klikbreedte, klikhoogte, Piece.blue) == true)
+                {
+                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
+                    beurt++;
+                }
+            }
+
             //code om de kleur aan te passen op basis van huidige klikstatus en toegevoegde bolletje
 
 
             // opnieuw scherm tekenen
             spelbord.Invalidate();
+        }
+
+        public void VoerBeurtUit(int row, int col, Piece color)
+        {
+            for (int dx = -1; dx <= 1; dx++)
+            {
+                for (int dy = -1; dy <= 1; dy++)
+                {
+                    try
+                    {
+                        int teller = 1;
+                        while (stenen[row + (dx * teller), col + (dy * teller)] != color && teller < breedte)
+                        {
+                            teller++;
+                        }
+                        if (stenen[row + (dx * teller), col + (dy * teller)] == color)
+                        {
+                            while (teller >= 0)
+                            {
+                                stenen[row + (dx * teller), col + (dy * teller)] = color;
+                                teller--;
+                            }
+                        }
+                    }
+                    catch (IndexOutOfRangeException e) { }
+                }
+            }
         }
     }
 }
