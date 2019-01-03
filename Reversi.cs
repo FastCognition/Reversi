@@ -74,21 +74,7 @@ namespace Reversi
 
             InitializeMyControl();
 
-            // eindeteksten
-            if (IsHetSpelAfgelopen() == true)
-            {
-                if (scoreRood == scoreBlauw)
-                    spelstatus = "Remise!";
-                else
-                {
-                    winnaar = Math.Max(scoreRood, scoreBlauw);
-                    if (winnaar == scoreRood)
-                        spelstatus = "Wit heeft gewonnen";
-                    else
-                        spelstatus = "Blauw heeft gewonnen";
-
-                }
-            }
+            EindeSpel();
 
             // hier staat wat de hulpmethode doet, true/false wordt ergens anders bepaald
             if (help == true)
@@ -200,10 +186,42 @@ namespace Reversi
         public bool IsHetSpelAfgelopen()
         {
             for (int y = 0; y < hoogte; y++)
+            {
                 for (int x = 0; x < breedte; x++)
-                    if (stenen[x, y] == Piece.none)
-                        return false;
+                {
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        for (int dy = -1; dy <= 1; dy++)
+                        {
+                            try
+                            {
+                                if (stenen[x, y] == Piece.none || LegaleZet(x, y, dx, dy, Piece.blue) == true || LegaleZet(x, y, dx, dy, Piece.red) == true)
+                                    return false;
+                            }
+                            catch (IndexOutOfRangeException e) { }
+                        }
+                    }
+                }
+            }
             return true;
+        }
+        public void EindeSpel()
+        {
+            if (IsHetSpelAfgelopen() == true)
+            {
+                if (scoreRood == scoreBlauw)
+                    spelstatus = "Remise!";
+                else
+                {
+                    winnaar = Math.Max(scoreRood, scoreBlauw);
+                    if (winnaar == scoreRood)
+                        spelstatus = "Wit heeft gewonnen";
+                    else
+                        spelstatus = "Blauw heeft gewonnen";
+
+                }
+            }
+            spelbord.Invalidate();
         }
 
         public bool LegaleZet(int x, int y, int dx, int dy, Piece color)
@@ -238,30 +256,33 @@ namespace Reversi
             klikhoogte = my / hokjesgrootte; // ycoords omgezet naar 1-6 hokjes
 
             // waarde van array x,y veranderen op basis van wie zijn beurt het is
-            for (int dx = -1; dx <= 1; dx++)
+            if (stenen[klikbreedte, klikhoogte] == Piece.none)
             {
-                for (int dy = -1; dy <= 1; dy++)
+                for (int dx = -1; dx <= 1; dx++)
                 {
-                    try
+                    for (int dy = -1; dy <= 1; dy++)
                     {
-                        if (beurt % 2 == 0)
+                        try
                         {
-                            if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.red) == true)
+                            if (beurt % 2 == 0)
                             {
-                                VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
-                                beurt++;
+                                if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.red) == true)
+                                {
+                                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
+                                    beurt++;
+                                }
+                            }
+                            else if (beurt % 2 == 1)
+                            {
+                                if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.blue) == true)
+                                {
+                                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
+                                    beurt++;
+                                }
                             }
                         }
-                        else if (beurt % 2 == 1)
-                        {
-                            if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.blue) == true)
-                            {
-                                VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
-                                beurt++;
-                            }
-                        }
+                        catch (IndexOutOfRangeException e) { }
                     }
-                    catch (IndexOutOfRangeException e) {}
                 }
             }
             // opnieuw scherm tekenen
