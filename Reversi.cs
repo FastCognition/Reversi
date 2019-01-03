@@ -117,16 +117,26 @@ namespace Reversi
             {
                 for (int x = 0; x < breedte; x++)
                 {
-                    Piece smallvar;
-                    if (beurt % 2 == 0)
-                        smallvar = Piece.red;
-                    else
-                        smallvar = Piece.blue;
-
-                    if (stenen[x, y] == Piece.none & LegaleZet(x, y, smallvar) == true)
+                    for (int dx = -1; dx <= 1; dx++)
                     {
-                        Rectangle opencirkeltje = new Rectangle(x * hokjesgrootte + diameter/2, y * hokjesgrootte + diameter/2, hokjesgrootte - diameter, hokjesgrootte - diameter);
-                        Rev.DrawEllipse(pen, opencirkeltje);
+                        for (int dy = -1; dy <= 1; dy++)
+                        {
+                            try
+                            {
+                                Piece smallvar;
+                                if (beurt % 2 == 0)
+                                    smallvar = Piece.red;
+                                else
+                                    smallvar = Piece.blue;
+
+                                if (stenen[x, y] == Piece.none & LegaleZet(x, y, dx, dy, smallvar) == true)
+                                {
+                                    Rectangle opencirkeltje = new Rectangle(x * hokjesgrootte + diameter / 2, y * hokjesgrootte + diameter / 2, hokjesgrootte - diameter, hokjesgrootte - diameter);
+                                    Rev.DrawEllipse(pen, opencirkeltje);
+                                }
+                            }
+                            catch (IndexOutOfRangeException e) {}
+                        }
                     }
                 }
             }
@@ -196,66 +206,64 @@ namespace Reversi
             return true;
         }
 
-        public bool LegaleZet(int row, int column, Piece color)
+        public bool LegaleZet(int x, int y, int dx, int dy, Piece color)
         {
-            int teller = 1;
-            if (stenen[row, column] == Piece.none) // is dit vakje leeg?
+            for (int teller = 1; teller < breedte; teller++)
             {
-                for (int dy = -1; dy <= 1; dy++) // kijken wat er omheen ligt
-                    for (int dx = -1; dx <= 1; dx++)
+                try
+                {
+                    int huidigex = x + teller * dx;
+                    int huidigey = y + teller * dy;
+                    if (stenen[huidigex, huidigey] == Piece.none)
                     {
-                        try
-                        {
-                            int huidigex = row + dx, huidigey = column + dy;
-                            if (stenen[huidigex, huidigey] != color && stenen[huidigex, huidigey] != Piece.none)
-                            {
-                                while (stenen[huidigex, huidigey] != color)
-                                {
-                                    huidigex += teller * dx;
-                                    huidigey += teller * dy;
-                                    teller++;
-                                }
-                                if (stenen[huidigex, huidigey] == color)
-                                {
-                                    return true;
-                                }
-                            }
-                        }
-                        catch (IndexOutOfRangeException e) { }
+                        return false;
                     }
+                    if (stenen[huidigex, huidigey] == color)
+                    {
+                        return teller > 1;
+                    }
+                }
+                catch (IndexOutOfRangeException e) {}
+
             }
             return false;
         }
 
-        private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
+        private void pictureBox1_MouseClick(object sender, MouseEventArgs ev)
         {
             // dan tekenen we op dit vakje een steen
-            mx = e.X; // gewoon xcoords
-            my = e.Y; // gewoon ycoords
+            mx = ev.X; // gewoon xcoords
+            my = ev.Y; // gewoon ycoords
             klikbreedte = mx / hokjesgrootte; //xcoords omgezet naar 1-6 hokjes
             klikhoogte = my / hokjesgrootte; // ycoords omgezet naar 1-6 hokjes
 
             // waarde van array x,y veranderen op basis van wie zijn beurt het is
-            if (beurt % 2 == 0)
+            for (int dx = -1; dx <= 1; dx++)
             {
-                if (LegaleZet(klikbreedte, klikhoogte, Piece.red) == true)
+                for (int dy = -1; dy <= 1; dy++)
                 {
-                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
-                    beurt++;
+                    try
+                    {
+                        if (beurt % 2 == 0)
+                        {
+                            if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.red) == true)
+                            {
+                                VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
+                                beurt++;
+                            }
+                        }
+                        else if (beurt % 2 == 1)
+                        {
+                            if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.blue) == true)
+                            {
+                                VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
+                                beurt++;
+                            }
+                        }
+                    }
+                    catch (IndexOutOfRangeException e) {}
                 }
             }
-            else if (beurt % 2 == 1)
-            {
-                if (LegaleZet(klikbreedte, klikhoogte, Piece.blue) == true)
-                {
-                    VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
-                    beurt++;
-                }
-            }
-
-            //code om de kleur aan te passen op basis van huidige klikstatus en toegevoegde bolletje
-
-
             // opnieuw scherm tekenen
             spelbord.Invalidate();
         }
