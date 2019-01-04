@@ -14,13 +14,13 @@ namespace Reversi
     public partial class Reversi : Form
     {
         public enum Piece : byte
-        { none = 0, red = 1, blue = 2}
+        { none = 0, red = 1, blue = 2, toegestaan = 3}
         Piece[,] stenen;
         Piece aandebeurt;
 
         int breedte, hoogte, hokjesgrootte, beurt, scoreRood, scoreBlauw, diameter;
         int mx, my, klikbreedte, klikhoogte, winnaar, schermbreedte, schermhoogte;
-        bool help, beeindigd, toegestaan;
+        bool help, beeindigd;
         string spelstatus;
 
         public Reversi()
@@ -109,11 +109,18 @@ namespace Reversi
                             try
                             {
                                 if (beurt % 2 == 0)
+                                {
                                     aandebeurt = Piece.red;
-                                else
-                                    aandebeurt = Piece.blue;
+                                }
+                                    
 
-                                if (stenen[x, y] == Piece.none & LegaleZet(x, y, dx, dy, aandebeurt) == true)
+                                else
+                                {
+                                    aandebeurt = Piece.blue;
+                                }
+                                    
+
+                                if (stenen[x, y] == Piece.none & LegaleZet(x, y, dx, dy, aandebeurt) == true && help == true)
                                 {
                                     Rectangle opencirkeltje = new Rectangle(x * hokjesgrootte + diameter / 2, y * hokjesgrootte + diameter / 2, hokjesgrootte - diameter, hokjesgrootte - diameter);
                                     Rev.DrawEllipse(pen, opencirkeltje);
@@ -143,12 +150,6 @@ namespace Reversi
             UpdateRood.Text = Convert.ToString(scoreRood);
             UpdateBlauw.Text = Convert.ToString(scoreBlauw);
         }
-        public void Zet()
-        {
-            Score();
-            EindeSpel();
-        }
-
         // nieuw-spel knop
         private void NieuwSpelKnop(object sender, EventArgs e)
         {
@@ -190,7 +191,7 @@ namespace Reversi
             spelbord.Invalidate();
         }
 
-        public bool IsHetSpelAfgelopen()
+        public bool Klaar()
         {
             for (int y = 0; y < hoogte; y++)
             {
@@ -202,8 +203,9 @@ namespace Reversi
                         {
                             try
                             {
-                                if (stenen[x,y] == Piece.none || toegestaan == true)
-                                    return false;
+                                if (stenen[x,y] != Piece.none & stenen[x, y] != Piece.toegestaan)
+                                    return true;
+                                return false;
                             }
                             catch (IndexOutOfRangeException) { }
                         }
@@ -214,24 +216,32 @@ namespace Reversi
         }
         public void EindeSpel()
         {
-            if (IsHetSpelAfgelopen() == true)
+            if (Klaar() == true)
             {
-                if (scoreRood == scoreBlauw)
-                    spelstatus = "Remise!";
-                else
+                try
                 {
-                    winnaar = Math.Max(scoreRood, scoreBlauw);
-                    if (winnaar == scoreRood)
-                        spelstatus = "Rood heeft gewonnen";
+                    if (scoreRood == scoreBlauw)
+                        spelstatus = "Remise!";
                     else
-                        spelstatus = "Blauw heeft gewonnen";
+                    {
+                        winnaar = Math.Max(scoreRood, scoreBlauw);
+                        if (winnaar == scoreRood)
+                            spelstatus = "Rood heeft gewonnen";
+                        else
+                            spelstatus = "Blauw heeft gewonnen";
 
+                    }
                 }
+                catch (IndexOutOfRangeException) { }
             }
+                   
+
+
             spelbord.Invalidate();
             beeindigd = true;
-            //help = false;
+            help = false;
         }
+
 
         public bool LegaleZet(int x, int y, int dx, int dy, Piece color)
         {
@@ -277,21 +287,19 @@ namespace Reversi
                             {
                                 if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.red) == true)
                                 {
+                                    aandebeurt = Piece.toegestaan;
                                     VoerBeurtUit(klikbreedte, klikhoogte, Piece.red);
                                     beurt++;
-                                    toegestaan = true;
                                 }
-                                else toegestaan = false;
                             }
                             else if (beurt % 2 == 1)
                             {
                                 if (LegaleZet(klikbreedte, klikhoogte, dx, dy, Piece.blue) == true)
                                 {
+                                    aandebeurt = Piece.toegestaan;
                                     VoerBeurtUit(klikbreedte, klikhoogte, Piece.blue);
                                     beurt++;
-                                    toegestaan = true;
                                 }
-                                else toegestaan = false;
                             }
                         }
                         catch (IndexOutOfRangeException e) { }
@@ -299,7 +307,8 @@ namespace Reversi
                 }
             }
             // opnieuw scherm tekenen
-            Zet();
+            Score();
+            EindeSpel();
             spelbord.Invalidate();
         }
 
@@ -332,3 +341,4 @@ namespace Reversi
         }
     }
 }
+
