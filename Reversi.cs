@@ -127,7 +127,7 @@ namespace Reversi
             Graphics Rev = ReversiBord.Graphics;
             Pen pen = new Pen(Brushes.Black, 3);
             pen.DashStyle = DashStyle.Dash;
-            
+
             for (int y = 0; y < hoogte; y++)
             {
                 for (int x = 0; x < breedte; x++)
@@ -159,32 +159,8 @@ namespace Reversi
 
         private void PasKnop_Click(object sender, EventArgs ev)
         {
-            for (int y = 0; y < hoogte; y++)
-            {
-                for (int x = 0; x < breedte; x++)
-                {
-                    for (int dx = -1; dx <= 1; dx++)
-                    {
-                        for (int dy = -1; dy <= 1; dy++)
-                        {
-                            try
-                            {
-                                if (beurt % 2 == 0 && LegaleZet(x, y, dx, dy, Piece.red) == true || beurt % 2 == 1 && LegaleZet(x, y, dx, dy, Piece.blue) == true)
-                                {
-                                    help = true;
-                                }
-                                else
-                                {
-                                    beurt++;
-                                }
-                                Invalidate();
-                            }
-                            catch (IndexOutOfRangeException e) { }
-                        }
-                    }
-                }
-            }
-           
+            beurt++;
+            spelbord.Invalidate();
         }
 
         // mouse-handler methode. Controleert of een klik (zet) legaal is en voert de zet uit als dat zo is
@@ -197,7 +173,7 @@ namespace Reversi
             klikhoogte = my / hokjesgrootte; // ycoords omgezet naar 1-6 hokjes
 
             // waarde van array x,y veranderen op basis van wie zijn beurt het is
-            if(stenen[klikbreedte, klikhoogte] == Piece.none)
+            if (stenen[klikbreedte, klikhoogte] == Piece.none)
             {
                 for (int dx = -1; dx <= 1; dx++)
                 {
@@ -228,7 +204,7 @@ namespace Reversi
                 // opnieuw scherm tekenen
                 spelbord.Invalidate();
             }
-            
+
         }
 
         // bool-methode die kijkt of een zet legaal is
@@ -271,7 +247,7 @@ namespace Reversi
                         }
                         if (stenen[row + (dx * teller), col + (dy * teller)] == color)
                         {
-                            for(int p = 0; p < teller; p++)
+                            for (int p = 0; p < teller; p++)
                             {
                                 stenen[row + p * dx, col + p * dy] = color;
                             }
@@ -340,7 +316,7 @@ namespace Reversi
                 {
                     winnaar = Math.Max(Score(Piece.red), Score(Piece.blue));
                     if (winnaar == Score(Piece.red))
-                        spelstatus = "Wit heeft gewonnen";
+                        spelstatus = "Rood heeft gewonnen";
                     else
                         spelstatus = "Blauw heeft gewonnen";
                 }
@@ -350,22 +326,22 @@ namespace Reversi
         // nieuw-spel knop: reset het veld, schakelt hulp uit en reset de beurt
         private void NieuwSpelKnop(object sender, EventArgs e)
         {
-                for (int x = 0; x < breedte; x++)
-                {
-                    for (int y = 0; y < hoogte; y++)
-                        stenen[x, y] = Piece.none;
-                }
+            for (int x = 0; x < breedte; x++)
+            {
+                for (int y = 0; y < hoogte; y++)
+                    stenen[x, y] = Piece.none;
+            }
 
-                // herlaadt startpositie
-                stenen[breedte / 2 - 1, hoogte / 2 - 1] = Piece.red;
-                stenen[breedte / 2, hoogte / 2] = Piece.red;
-                stenen[breedte / 2 - 1, hoogte / 2] = Piece.blue;
-                stenen[breedte / 2, hoogte / 2 - 1] = Piece.blue;
+            // herlaadt startpositie
+            stenen[breedte / 2 - 1, hoogte / 2 - 1] = Piece.red;
+            stenen[breedte / 2, hoogte / 2] = Piece.red;
+            stenen[breedte / 2 - 1, hoogte / 2] = Piece.blue;
+            stenen[breedte / 2, hoogte / 2 - 1] = Piece.blue;
 
-                help = false;
-                beurt = 0;
-                spelstatus = "Rood is aan zet";
-                spelbord.Invalidate();
+            help = false;
+            beurt = 0;
+            spelstatus = "Rood is aan zet";
+            spelbord.Invalidate();
         }
     }
 }
